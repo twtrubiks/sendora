@@ -20,7 +20,7 @@ gem "tailwindcss-rails"
 gem "jbuilder"
 
 # Pagination [https://ddnexus.github.io/pagy/]
-gem "pagy", "~> 9.0"
+gem "pagy", "~> 43.5"
 # One-line charts backed by Chart.js [https://chartkick.com]
 gem "chartkick"
 # group_by_day and friends for chart queries [https://github.com/ankane/groupdate]
