@@ -1,0 +1,11 @@
+acme_vip:
+  team: acme
+  name: VIP
+
+acme_new:
+  team: acme
+  name: 新客
+
+globex_vip:
+  team: globex
+  name: VIP

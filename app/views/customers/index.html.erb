@@ -1,0 +1,66 @@
+<% content_for :title, "客戶 - #{Current.team.name} - Sendora" %>
+
+<div class="flex items-center justify-between">
+  <h1 class="text-2xl font-bold">客戶</h1>
+  <div class="flex gap-2">
+    <%= link_to "匯出 CSV", customers_path(format: :csv, q: params[:q].presence), data: { turbo: false },
+                class: "inline-block rounded-md border border-gray-300 bg-white px-3.5 py-2.5 font-medium text-gray-700 hover:bg-gray-50" %>
+    <%= link_to "標籤管理", tags_path, class: "inline-block rounded-md border border-gray-300 bg-white px-3.5 py-2.5 font-medium text-gray-700 hover:bg-gray-50" %>
+    <%= link_to "新增客戶", new_customer_path, class: ApplicationHelper::PRIMARY_BUTTON_CLASSES %>
+  </div>
+</div>
+
+<% if @customers.empty? && params[:q].blank? %>
+  <div class="mt-10 rounded-lg border border-dashed border-gray-300 bg-white px-6 py-16 text-center">
+    <p class="text-lg font-medium text-gray-900">還沒有客戶</p>
+    <p class="mt-2 text-sm text-gray-500">匯入 CSV 或手動新增第一位客戶。</p>
+    <div class="mt-6 flex justify-center gap-3">
+      <%= link_to "前往匯入", import_jobs_path, class: ApplicationHelper::PRIMARY_BUTTON_CLASSES %>
+      <%= link_to "手動新增", new_customer_path, class: "inline-block rounded-md border border-gray-300 bg-white px-3.5 py-2.5 font-medium text-gray-700 hover:bg-gray-50" %>
+    </div>
+  </div>
+<% else %>
+  <%= form_with url: customers_path, method: :get, data: { turbo_frame: "customers_list" }, class: "mt-4 flex gap-2" do |form| %>
+    <%= form.search_field :q, value: params[:q], placeholder: "搜尋 email 或姓名", class: "#{ApplicationHelper::INPUT_CLASSES} max-w-xs" %>
+    <%= form.submit "搜尋", class: "cursor-pointer rounded-md border border-gray-300 bg-white px-3.5 py-2 font-medium text-gray-700 hover:bg-gray-50" %>
+  <% end %>
+
+  <%= turbo_frame_tag "customers_list", target: "_top" do %>
+    <div class="mt-4 overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-gray-50 text-xs text-gray-500">
+          <tr>
+            <th class="px-4 py-2 font-medium">Email</th>
+            <th class="px-4 py-2 font-medium">姓名</th>
+            <th class="px-4 py-2 font-medium">電話</th>
+            <th class="px-4 py-2 font-medium">狀態</th>
+            <th class="px-4 py-2 font-medium">建立日期</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <% @customers.each do |customer| %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-2"><%= link_to customer.email, customer_path(customer), class: "font-medium text-indigo-600 hover:underline" %></td>
+              <td class="px-4 py-2 text-gray-700"><%= customer.name %></td>
+              <td class="px-4 py-2 text-gray-500"><%= customer.phone %></td>
+              <td class="px-4 py-2">
+                <% if customer.unsubscribed? %>
+                  <span class="rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">已退訂</span>
+                <% end %>
+                <% if customer.bounced? %>
+                  <span class="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">退信</span>
+                <% end %>
+              </td>
+              <td class="px-4 py-2 text-gray-500"><%= customer.created_at.strftime("%Y-%m-%d") %></td>
+            </tr>
+          <% end %>
+          <% if @customers.empty? %>
+            <tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">找不到符合「<%= params[:q] %>」的客戶</td></tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <%= render "shared/pagination", pagy: @pagy %>
+  <% end %>
+<% end %>

@@ -1,0 +1,35 @@
+<% active_classes = "bg-indigo-50 font-medium text-indigo-700"
+   inactive_classes = "text-gray-700 hover:bg-gray-50" %>
+<aside class="min-h-[calc(100vh-3.5rem)] w-56 shrink-0 border-r border-gray-200 bg-white p-3">
+  <nav class="space-y-1 text-sm">
+    <%= link_to team_root_path,
+                class: "flex items-center gap-2 rounded-md px-3 py-2 #{current_page?(team_root_path) ? active_classes : inactive_classes}" do %>
+      <span>📊</span> 儀表板
+    <% end %>
+
+    <%= link_to customers_path,
+                class: "flex items-center gap-2 rounded-md px-3 py-2 #{request.path.include?('/customers') ? active_classes : inactive_classes}" do %>
+      <span>👥</span> 客戶
+    <% end %>
+
+    <%= link_to audiences_path,
+                class: "flex items-center gap-2 rounded-md px-3 py-2 #{request.path.include?('/audiences') ? active_classes : inactive_classes}" do %>
+      <span>🏷️</span> 分群
+    <% end %>
+
+    <%= link_to campaigns_path,
+                class: "flex items-center gap-2 rounded-md px-3 py-2 #{request.path.include?('/campaigns') ? active_classes : inactive_classes}" do %>
+      <span>✉️</span> 活動
+    <% end %>
+
+    <%= link_to import_jobs_path,
+                class: "flex items-center gap-2 rounded-md px-3 py-2 #{request.path.include?('/imports') ? active_classes : inactive_classes}" do %>
+      <span>📥</span> 匯入
+    <% end %>
+
+    <%= link_to settings_team_path,
+                class: "flex items-center gap-2 rounded-md px-3 py-2 #{request.path.include?('/settings') ? active_classes : inactive_classes}" do %>
+      <span>⚙️</span> 設定
+    <% end %>
+  </nav>
+</aside>

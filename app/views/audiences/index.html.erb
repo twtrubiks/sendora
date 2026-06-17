@@ -1,0 +1,47 @@
+<% content_for :title, "分群 - #{Current.team.name} - Sendora" %>
+
+<div class="flex items-center justify-between">
+  <h1 class="text-2xl font-bold">分群</h1>
+  <%= link_to "建立分群", new_audience_path, class: ApplicationHelper::PRIMARY_BUTTON_CLASSES %>
+</div>
+
+<% if @audiences.empty? %>
+  <div class="mt-10 rounded-lg border border-dashed border-gray-300 bg-white px-6 py-16 text-center">
+    <p class="text-lg font-medium text-gray-900">還沒有分群</p>
+    <p class="mt-2 text-sm text-gray-500">建立第一個分群,精準鎖定你的客戶。</p>
+    <% if Current.team.customers.exists? %>
+      <%= link_to "建立分群", new_audience_path, class: "mt-6 #{ApplicationHelper::PRIMARY_BUTTON_CLASSES}" %>
+    <% else %>
+      <p class="mt-2 text-sm text-gray-500">分群需要先有客戶資料。</p>
+      <%= link_to "前往匯入客戶", import_jobs_path, class: "mt-6 #{ApplicationHelper::PRIMARY_BUTTON_CLASSES}" %>
+    <% end %>
+  </div>
+<% else %>
+  <div class="mt-4 overflow-hidden rounded-lg border border-gray-200 bg-white">
+    <table class="w-full text-left text-sm">
+      <thead class="bg-gray-50 text-xs text-gray-500">
+        <tr>
+          <th class="px-4 py-2 font-medium">名稱</th>
+          <th class="px-4 py-2 font-medium">條件</th>
+          <th class="px-4 py-2 font-medium">預估人數</th>
+          <th class="px-4 py-2"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        <% @audiences.each do |audience| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-2"><%= link_to audience.name, edit_audience_path(audience), class: "font-medium text-indigo-600 hover:underline" %></td>
+            <td class="px-4 py-2 text-gray-600"><%= audience_conditions_summary(audience) %></td>
+            <td class="px-4 py-2 text-gray-700"><%= number_with_delimiter(audience.customers.count) %> 人</td>
+            <td class="px-4 py-2 text-right">
+              <%= button_to "刪除", audience_path(audience), method: :delete,
+                            data: { turbo_confirm: "確定要刪除分群「#{audience.name}」?" },
+                            class: "cursor-pointer text-sm text-red-600 hover:underline" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <p class="mt-3 text-sm text-gray-500">人數為即時計算的預估值;分群會在每次使用時重新解析,不保存固定名單。</p>
+<% end %>

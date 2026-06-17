@@ -1,0 +1,53 @@
+<% content_for :title, "活動 - #{Current.team.name} - Sendora" %>
+
+<div class="flex items-center justify-between">
+  <h1 class="text-2xl font-bold">行銷活動</h1>
+  <%= link_to "建立活動", new_campaign_path, class: ApplicationHelper::PRIMARY_BUTTON_CLASSES %>
+</div>
+
+<% if @campaigns.empty? %>
+  <div class="mt-10 rounded-lg border border-dashed border-gray-300 bg-white px-6 py-16 text-center">
+    <p class="text-lg font-medium text-gray-900">還沒有活動</p>
+    <p class="mt-2 text-sm text-gray-500">對某個分群發出第一封行銷信。</p>
+    <% if Current.team.audiences.exists? %>
+      <%= link_to "建立活動", new_campaign_path, class: "mt-6 #{ApplicationHelper::PRIMARY_BUTTON_CLASSES}" %>
+    <% else %>
+      <p class="mt-2 text-sm text-gray-500">活動需要先有分群。</p>
+      <%= link_to "前往建立分群", audiences_path, class: "mt-6 #{ApplicationHelper::PRIMARY_BUTTON_CLASSES}" %>
+    <% end %>
+  </div>
+<% else %>
+  <div class="mt-4 overflow-hidden rounded-lg border border-gray-200 bg-white">
+    <table class="w-full text-left text-sm">
+      <thead class="bg-gray-50 text-xs text-gray-500">
+        <tr>
+          <th class="px-4 py-2 font-medium">活動</th>
+          <th class="px-4 py-2 font-medium">分群</th>
+          <th class="px-4 py-2 font-medium">狀態</th>
+          <th class="px-4 py-2 font-medium">發送時間</th>
+          <th class="px-4 py-2"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        <% @campaigns.each do |campaign| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-2">
+              <%= link_to campaign.name, campaign.draft? ? edit_campaign_path(campaign) : campaign_path(campaign),
+                          class: "font-medium text-indigo-600 hover:underline" %>
+              <p class="text-xs text-gray-500"><%= campaign.subject %></p>
+            </td>
+            <td class="px-4 py-2 text-gray-600"><%= campaign.audience.name %></td>
+            <td class="px-4 py-2"><%= render "campaigns/status_badge", campaign: campaign %></td>
+            <td class="px-4 py-2 text-gray-500"><%= campaign.sent_at&.strftime("%Y-%m-%d %H:%M") || "—" %></td>
+            <td class="px-4 py-2 text-right">
+              <%= button_to "複製", duplicate_campaign_path(campaign), method: :post,
+                            class: "cursor-pointer text-sm text-indigo-600 hover:underline" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <%= render "shared/pagination", pagy: @pagy %>
+<% end %>

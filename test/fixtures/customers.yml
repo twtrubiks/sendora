@@ -1,0 +1,15 @@
+acme_tom:
+  team: acme
+  email: tom@example.com
+  name: Tom 陳
+
+acme_unsub:
+  team: acme
+  email: unsub@example.com
+  name: 退訂仔
+  unsubscribed_at: <%= Time.zone.parse("2026-05-01 10:00") %>
+
+globex_tom:
+  team: globex
+  email: tom@example.com
+  name: Tom in Globex

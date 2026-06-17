@@ -1,0 +1,105 @@
+# Name of your application. Used to uniquely configure containers.
+service: sendora
+
+# Name of the container image (use your-user/app-name on external registries).
+image: your-dockerhub-user/sendora
+
+# 單機部署:web 與 postgres accessory 在同一台 VPS。
+# TODO 上線前替換:伺服器 IP、網域、registry。
+servers:
+  web:
+    - YOUR_SERVER_IP
+
+# kamal-proxy 自動申請 Let's Encrypt 憑證。
+proxy:
+  ssl: true
+  host: sendora.example.com
+
+# 映像倉庫:Docker Hub 私有 repo(單機部署用本機 registry 會踩 Kamal 的死結,
+# 原因見 docs/KAMAL_DEPLOY.md 附錄〈為什麼不用本機 registry〉;改用私有 Docker Hub 最省事)。
+# username 非機密、可入版控;password 走 secret(token 放 repo 外的 env 檔)。
+registry:
+  server: docker.io
+  username: your-dockerhub-user
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+# Inject ENV variables into containers (secrets come from .kamal/secrets).
+env:
+  secret:
+    - RAILS_MASTER_KEY
+    - SENDORA_DATABASE_PASSWORD
+    - SMTP_USERNAME
+    - SMTP_PASSWORD
+  clear:
+    # Solid Queue 跑在 Puma 進程內,免獨立 worker;量大了再拆 job 伺服器
+    SOLID_QUEUE_IN_PUMA: true
+
+    # 同機的 postgres accessory(經 kamal docker network)
+    DB_HOST: sendora-db
+
+    # mailer 連結與 SMTP 服務商(Mailgun / Postmark / SES 皆可)
+    APP_HOST: sendora.example.com
+    SMTP_ADDRESS: smtp.mailgun.org # TODO: 換成實際服務商(測 HTTPS 階段先不真寄)
+    SMTP_PORT: 587
+    MAILER_FROM: Sendora <no-reply@sendora.example.com>
+
+    # Set number of processes dedicated to Solid Queue (default: 1)
+    # JOB_CONCURRENCY: 3
+
+    # Set number of cores available to the application on each server (default: 1).
+    # WEB_CONCURRENCY: 2
+
+# Aliases are triggered with "bin/kamal <alias>". You can overwrite arguments on invocation:
+# "bin/kamal logs -r job" will tail logs from the first server in the job section.
+aliases:
+  console: app exec --interactive --reuse "bin/rails console"
+  shell: app exec --interactive --reuse "bash"
+  logs: app logs -f
+  dbc: app exec --interactive --reuse "bin/rails dbconsole --include-password"
+
+# ActiveStorage(Disk)的匯入暫存檔放這顆 volume
+volumes:
+  - "sendora_storage:/rails/storage"
+
+# Bridge fingerprinted assets, like JS and CSS, between versions to avoid
+# hitting 404 on in-flight requests. Combines all files from new and old
+# version inside the asset_path.
+asset_path: /rails/public/assets
+
+# Configure the image builder.
+builder:
+  arch: amd64
+
+  # # Build image via remote server (useful for faster amd64 builds on arm64 computers)
+  # remote: ssh://docker@docker-builder-server
+  #
+  # # Pass arguments and secrets to the Docker build process
+  # args:
+  #   RUBY_VERSION: ruby-4.0.5
+  # secrets:
+  #   - GITHUB_TOKEN
+  #   - RAILS_MASTER_KEY
+
+# 同一台部署:Kamal 從本機 SSH 回本機(sshd 在 YOUR_SSH_PORT),
+# 用 YOUR_USER(已在 docker 群組),金鑰用前面產的 kamal_local。
+ssh:
+  user: YOUR_USER
+  port: YOUR_SSH_PORT
+  keys:
+    - "~/.ssh/kamal_local"
+
+# PostgreSQL 18 accessory(掛 volume;備份 = cron pg_dump + rsync storage/)
+accessories:
+  db:
+    image: postgres:18
+    host: YOUR_SERVER_IP
+    port: "127.0.0.1:5432:5432"
+    env:
+      clear:
+        POSTGRES_USER: sendora
+        POSTGRES_DB: sendora_production
+      secret:
+        - POSTGRES_PASSWORD
+    directories:
+      - data:/var/lib/postgresql

@@ -1,0 +1,36 @@
+<%= form_with model: campaign, url: url, class: "contents" do |form| %>
+  <div class="my-5 max-w-md">
+    <%= form.label :name, class: "block text-sm font-medium text-gray-700" %>
+    <%= form.text_field :name, required: true, placeholder: "內部辨識用,例如:六月會員回購", class: "#{ApplicationHelper::INPUT_CLASSES} mt-1" %>
+    <%= field_error campaign, :name %>
+  </div>
+
+  <fieldset class="my-5 max-w-md rounded-lg border border-gray-200 p-4">
+    <legend class="px-1 text-sm font-semibold text-gray-900">① 對象</legend>
+    <%= form.label :audience_id, class: "block text-sm font-medium text-gray-700" %>
+    <%= form.collection_select :audience_id, Current.team.audiences.order(:name), :id, :name, {}, class: "#{ApplicationHelper::INPUT_CLASSES} mt-1" %>
+    <p class="mt-1 text-sm text-gray-500">發送時會即時解析分群,並自動排除已退訂與退信的客戶。</p>
+  </fieldset>
+
+  <fieldset class="my-5 max-w-2xl rounded-lg border border-gray-200 p-4">
+    <legend class="px-1 text-sm font-semibold text-gray-900">② 內容</legend>
+
+    <div class="mb-4">
+      <%= form.label :subject, class: "block text-sm font-medium text-gray-700" %>
+      <%= form.text_field :subject, required: true, class: "#{ApplicationHelper::INPUT_CLASSES} mt-1" %>
+      <%= field_error campaign, :subject %>
+    </div>
+
+    <div>
+      <%= form.label :body, "內文", class: "block text-sm font-medium text-gray-700" %>
+      <%= form.text_area :body, required: true, rows: 10, class: "#{ApplicationHelper::INPUT_CLASSES} mt-1" %>
+      <p class="mt-1 text-sm text-gray-500">純文字;<code class="rounded bg-gray-100 px-1">{{name}}</code> 會替換成客戶姓名(沒有姓名時為「貴賓」)。信末會自動附上退訂連結。</p>
+      <%= field_error campaign, :body %>
+    </div>
+  </fieldset>
+
+  <div class="flex items-center gap-3">
+    <%= form.submit "儲存並前往發送確認", class: ApplicationHelper::PRIMARY_BUTTON_CLASSES %>
+    <%= link_to "取消", campaigns_path, class: "text-sm text-gray-500 underline hover:no-underline" %>
+  </div>
+<% end %>

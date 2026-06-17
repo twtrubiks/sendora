@@ -1,0 +1,10 @@
+acme_draft:
+  team: acme
+  audience: acme_vips
+  name: 六月會員回購
+  subject: "{{name}} 您好,六月專屬優惠"
+  body: |
+    親愛的 {{name}}:
+
+    六月全館 9 折,歡迎回購!
+  status: draft

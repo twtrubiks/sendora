@@ -1,0 +1,112 @@
+"zh-TW":
+  roles:
+    owner: 擁有者
+    member: 成員
+
+  campaigns:
+    statuses:
+      draft: 草稿
+      sending: 發送中
+      sent: 已完成
+      failed: 失敗
+
+  import_jobs:
+    kinds:
+      customers: 客戶
+      orders: 訂單
+    statuses:
+      pending: 等待中
+      processing: 處理中
+      completed: 已完成
+      failed: 失敗
+
+  activerecord:
+    models:
+      user: 使用者
+      team: 團隊
+      membership: 成員
+      customer: 客戶
+      order: 訂單
+      import_job: 匯入
+      tag: 標籤
+      audience: 分群
+      campaign: 行銷活動
+      delivery: 發送記錄
+    attributes:
+      user:
+        email_address: Email
+        password: 密碼
+        password_confirmation: 密碼確認
+      team:
+        name: 團隊名稱
+        slug: 網址代稱
+        monthly_send_quota: 每月發送額度
+      membership:
+        user: 使用者
+        role: 角色
+      customer:
+        email: Email
+        name: 姓名
+        phone: 電話
+      order:
+        number: 訂單編號
+        amount: 金額
+        ordered_at: 下單日期
+      import_job:
+        kind: 匯入類型
+        file: 檔案
+      tag:
+        name: 標籤名稱
+      audience:
+        name: 分群名稱
+        conditions: 條件
+      campaign:
+        name: 活動名稱
+        subject: 主旨
+        body: 內文
+        audience: 分群
+    errors:
+      messages:
+        record_invalid: 驗證失敗:%{errors}
+        restrict_dependent_destroy:
+          has_one: 仍有相關的%{record},無法刪除
+          has_many: 仍有相關的%{record},無法刪除
+      models:
+        team:
+          attributes:
+            slug:
+              invalid: 只能使用小寫英文、數字與連字號(-)
+        membership:
+          attributes:
+            user_id:
+              taken: 已是團隊成員
+        import_job:
+          attributes:
+            file:
+              blank: 請選擇要上傳的檔案
+              too_large: 不可超過 10MB
+              wrong_type: 必須是 CSV 檔(.csv)
+
+  datetime:
+    distance_in_words:
+      x_minutes:
+        one: 1 分鐘
+        other: "%{count} 分鐘"
+      about_x_hours:
+        one: 約 1 小時
+        other: 約 %{count} 小時
+
+  errors:
+    format: "%{attribute}%{message}"
+    messages:
+      blank: 不可空白
+      taken: 已被使用
+      invalid: 格式不正確
+      too_short: 至少需要 %{count} 個字元
+      too_long: 不可超過 %{count} 個字元
+      wrong_length: 長度必須是 %{count} 個字元
+      confirmation: 與%{attribute}不一致
+      inclusion: 不在允許的範圍內
+      not_a_number: 必須是數字
+      not_an_integer: 必須是整數
+      greater_than_or_equal_to: 必須大於或等於 %{count}

@@ -1,0 +1,11 @@
+acme_vips:
+  team: acme
+  name: VIP 客戶
+  conditions:
+    tags:
+      - VIP
+
+acme_all:
+  team: acme
+  name: 全部客戶
+  conditions: {}

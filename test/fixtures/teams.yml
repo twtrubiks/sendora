@@ -1,0 +1,8 @@
+acme:
+  name: Acme 商店
+  slug: acme
+
+globex:
+  name: Globex
+  slug: globex
+  monthly_send_quota: 1000

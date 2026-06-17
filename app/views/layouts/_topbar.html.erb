@@ -1,0 +1,38 @@
+<header class="border-b border-gray-200 bg-white">
+  <div class="flex h-14 items-center gap-4 px-4">
+    <%= link_to "Sendora", teams_path(team_slug: nil), class: "text-lg font-bold text-indigo-600" %>
+
+    <div class="relative" data-controller="dropdown" data-action="click@window->dropdown#hide">
+      <button type="button" data-action="dropdown#toggle"
+              class="flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-gray-700 hover:bg-gray-100">
+        <%= Current.team.name %>
+        <span class="text-gray-400">▾</span>
+      </button>
+      <div data-dropdown-target="menu" class="absolute left-0 z-10 mt-1 hidden w-56 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+        <% Current.user.teams.order(:name).each do |team| %>
+          <%= link_to team.name, team_root_path(team_slug: team.slug),
+                      class: "block px-3 py-1.5 text-sm #{team == Current.team ? 'font-semibold text-indigo-600' : 'text-gray-700'} hover:bg-gray-50" %>
+        <% end %>
+        <div class="my-1 border-t border-gray-100"></div>
+        <%= link_to "+ 建立團隊", new_team_path(team_slug: nil), class: "block px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50" %>
+      </div>
+    </div>
+
+    <div class="ml-auto text-sm <%= Current.team.quota_nearly_exhausted? ? "rounded-full bg-yellow-100 px-2.5 py-0.5 font-medium text-yellow-800" : "text-gray-500" %>">
+      本月發送 <%= number_with_delimiter(Current.team.monthly_sent_count) %> / <%= number_with_delimiter(Current.team.monthly_send_quota) %>
+    </div>
+
+    <div class="relative" data-controller="dropdown" data-action="click@window->dropdown#hide">
+      <button type="button" data-action="dropdown#toggle"
+              class="flex size-8 items-center justify-center rounded-full bg-indigo-600 text-sm font-semibold text-white">
+        <%= Current.user.email_address.first.upcase %>
+      </button>
+      <div data-dropdown-target="menu" class="absolute right-0 z-10 mt-1 hidden w-64 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+        <p class="px-3 py-1.5 text-sm text-gray-500"><%= Current.user.email_address %></p>
+        <div class="my-1 border-t border-gray-100"></div>
+        <%= button_to "登出", session_path(team_slug: nil), method: :delete,
+                      class: "block w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-50" %>
+      </div>
+    </div>
+  </div>
+</header>

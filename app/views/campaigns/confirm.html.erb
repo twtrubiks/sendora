@@ -1,0 +1,51 @@
+<% content_for :title, "發送確認 - Sendora" %>
+
+<div class="mx-auto mt-8 max-w-xl">
+  <h1 class="text-2xl font-bold">發送確認</h1>
+  <p class="mt-1 text-sm text-gray-500">發送後無法取消或收回,請仔細確認以下內容。</p>
+
+  <div class="mt-6 rounded-lg border border-gray-200 bg-white p-5">
+    <dl class="space-y-3 text-sm">
+      <div class="flex justify-between">
+        <dt class="text-gray-500">活動</dt>
+        <dd class="font-medium text-gray-900"><%= @campaign.name %></dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-gray-500">主旨</dt>
+        <dd class="font-medium text-gray-900"><%= @campaign.subject %></dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-gray-500">分群</dt>
+        <dd class="font-medium text-gray-900"><%= @campaign.audience.name %></dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-gray-500">將發送給</dt>
+        <dd class="font-semibold text-indigo-700"><%= number_with_delimiter(@recipients_count) %> 位客戶</dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-gray-500">本月剩餘額度</dt>
+        <dd class="font-medium <%= @can_send ? 'text-gray-900' : 'text-red-600' %>"><%= number_with_delimiter(@remaining_quota) %> 封</dd>
+      </div>
+    </dl>
+
+    <p class="mt-4 rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-500">
+      已自動排除退訂與退信無效的客戶,因此人數可能與分群預覽不同。
+    </p>
+
+    <div class="mt-5 flex items-center gap-3">
+      <% if @can_send %>
+        <%= button_to "確認發送", deliver_campaign_path(@campaign), method: :post,
+                      class: "cursor-pointer rounded-md bg-indigo-600 px-5 py-2.5 font-medium text-white hover:bg-indigo-500" %>
+      <% else %>
+        <button type="button" disabled class="cursor-not-allowed rounded-md bg-gray-200 px-5 py-2.5 font-medium text-gray-500">確認發送</button>
+        <span class="text-sm text-red-600">
+          <%= @recipients_count.zero? ? "此分群目前沒有可寄送的客戶" : "超出本月額度,請聯絡管理者調整" %>
+        </span>
+      <% end %>
+    </div>
+  </div>
+
+  <p class="mt-4">
+    <%= link_to "← 回草稿繼續編輯", edit_campaign_path(@campaign), class: "text-sm text-gray-500 underline hover:no-underline" %>
+  </p>
+</div>

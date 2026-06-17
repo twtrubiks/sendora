@@ -1,0 +1,24 @@
+<% type = condition_value_type(key) %>
+<div data-condition-row class="flex items-center gap-2">
+  <%= select_tag "audience[rows][][key]", options_for_select(condition_key_options, key),
+                 data: { action: "conditions#switchType" },
+                 class: "#{ApplicationHelper::INPUT_CLASSES} w-44" %>
+
+  <%= select_tag "audience[rows][][value]",
+                 options_for_select(Current.team.tags.order(:name).pluck(:name), type == "tag" ? value : nil),
+                 hidden: type != "tag", disabled: type != "tag",
+                 data: { value_input: "tag" },
+                 class: "#{ApplicationHelper::INPUT_CLASSES} w-44" %>
+
+  <%= number_field_tag "audience[rows][][value]", type == "number" ? value : nil,
+                       min: 0, step: "any", hidden: type != "number", disabled: type != "number",
+                       data: { value_input: "number" },
+                       class: "#{ApplicationHelper::INPUT_CLASSES} w-44" %>
+
+  <%= date_field_tag "audience[rows][][value]", type == "date" ? value : nil,
+                     hidden: type != "date", disabled: type != "date",
+                     data: { value_input: "date" },
+                     class: "#{ApplicationHelper::INPUT_CLASSES} w-44" %>
+
+  <button type="button" data-action="conditions#remove" class="cursor-pointer text-sm text-gray-400 hover:text-red-600" title="移除條件">✕</button>
+</div>

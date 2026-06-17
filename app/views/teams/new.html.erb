@@ -1,0 +1,27 @@
+<% content_for :title, "建立團隊 - Sendora" %>
+
+<h1 class="text-2xl font-bold">建立團隊</h1>
+<p class="mt-2 text-sm text-gray-500">團隊是所有資料的邊界:客戶、分群與行銷活動都屬於團隊。</p>
+
+<%= form_with model: @team, url: teams_path, class: "contents" do |form| %>
+  <div class="my-5">
+    <%= form.label :name, class: "block text-sm font-medium text-gray-700" %>
+    <%= form.text_field :name, required: true, autofocus: true, class: "#{ApplicationHelper::INPUT_CLASSES} mt-1" %>
+    <%= field_error @team, :name %>
+  </div>
+
+  <div class="my-5">
+    <%= form.label :slug, class: "block text-sm font-medium text-gray-700" %>
+    <%= form.text_field :slug, required: true, pattern: "[a-z0-9\\-]+", class: "#{ApplicationHelper::INPUT_CLASSES} mt-1" %>
+    <p class="mt-1 text-sm text-gray-500">將出現在網址中,例如 /t/acme。只能用小寫英文、數字與連字號。</p>
+    <%= field_error @team, :slug %>
+  </div>
+
+  <%= form.submit "建立團隊", class: ApplicationHelper::PRIMARY_BUTTON_CLASSES %>
+<% end %>
+
+<% if Current.user.teams.any? %>
+  <p class="mt-6 text-sm text-gray-500">
+    <%= link_to "回我的團隊", teams_path, class: "text-indigo-600 underline hover:no-underline" %>
+  </p>
+<% end %>
