@@ -1,0 +1,18 @@
+<% content_for :title, "改名標籤 - Sendora" %>
+
+<h1 class="text-2xl font-bold">改名標籤</h1>
+
+<div class="mt-4 max-w-md rounded-lg border border-gray-200 bg-white p-5">
+  <%= form_with model: @tag, url: tag_path(@tag), class: "contents" do |form| %>
+    <div class="my-4">
+      <%= form.label :name, class: "block text-sm font-medium text-gray-700" %>
+      <%= form.text_field :name, required: true, class: "#{ApplicationHelper::INPUT_CLASSES} mt-1" %>
+      <%= field_error @tag, :name %>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <%= form.submit "儲存", class: ApplicationHelper::PRIMARY_BUTTON_CLASSES %>
+      <%= link_to "取消", tags_path, class: "text-sm text-gray-500 underline hover:no-underline" %>
+    </div>
+  <% end %>
+</div>

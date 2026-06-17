@@ -1,0 +1,24 @@
+<%= form_with model: customer, url: url, class: "contents" do |form| %>
+  <div class="my-5">
+    <%= form.label :email, class: "block text-sm font-medium text-gray-700" %>
+    <%= form.email_field :email, required: true, class: "#{ApplicationHelper::INPUT_CLASSES} mt-1" %>
+    <%= field_error customer, :email %>
+  </div>
+
+  <div class="my-5">
+    <%= form.label :name, class: "block text-sm font-medium text-gray-700" %>
+    <%= form.text_field :name, class: "#{ApplicationHelper::INPUT_CLASSES} mt-1" %>
+    <%= field_error customer, :name %>
+  </div>
+
+  <div class="my-5">
+    <%= form.label :phone, class: "block text-sm font-medium text-gray-700" %>
+    <%= form.telephone_field :phone, class: "#{ApplicationHelper::INPUT_CLASSES} mt-1" %>
+    <%= field_error customer, :phone %>
+  </div>
+
+  <div class="flex items-center gap-3">
+    <%= form.submit submit_label, class: ApplicationHelper::PRIMARY_BUTTON_CLASSES %>
+    <%= link_to "取消", customers_path, class: "text-sm text-gray-500 underline hover:no-underline" %>
+  </div>
+<% end %>

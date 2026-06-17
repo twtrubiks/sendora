@@ -1,0 +1,75 @@
+<% content_for :title, "匯入詳情 - Sendora" %>
+
+<p class="mb-4">
+  <%= link_to "← 回匯入列表", import_jobs_path, class: "text-sm text-gray-500 underline hover:no-underline" %>
+</p>
+
+<h1 class="text-2xl font-bold">匯入詳情</h1>
+<p class="mt-1 text-sm text-gray-500">
+  <%= @import_job.filename %> · <%= t("import_jobs.kinds.#{@import_job.kind}") %> ·
+  上傳於 <%= @import_job.created_at.strftime("%Y-%m-%d %H:%M") %>
+</p>
+
+<%= turbo_frame_tag @import_job, src: import_job_path(@import_job), target: "_top" do %>
+  <div <% if @import_job.in_progress? %>data-controller="poll"<% end %> class="mt-6 max-w-4xl">
+    <div class="flex items-center gap-3">
+      <%= render "import_jobs/status_badge", import_job: @import_job %>
+      <% if @import_job.in_progress? %>
+        <span class="text-sm text-gray-500">背景處理中,本頁會自動更新…</span>
+      <% end %>
+    </div>
+
+    <% if @import_job.failed? %>
+      <div class="mt-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700"><%= @import_job.error_message %></div>
+    <% end %>
+
+    <% if @import_job.completed? %>
+      <div class="mt-4 grid max-w-xl grid-cols-3 gap-4">
+        <div class="rounded-lg border border-gray-200 bg-white p-4">
+          <p class="text-xs text-gray-500">總列數</p>
+          <p class="mt-1 text-xl font-semibold"><%= number_with_delimiter(@import_job.total_rows) %></p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-white p-4">
+          <p class="text-xs text-gray-500">成功</p>
+          <p class="mt-1 text-xl font-semibold text-green-600"><%= number_with_delimiter(@import_job.success_count) %></p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-white p-4">
+          <p class="text-xs text-gray-500">失敗</p>
+          <p class="mt-1 text-xl font-semibold <%= @import_job.failure_count.positive? ? 'text-red-600' : '' %>"><%= number_with_delimiter(@import_job.failure_count) %></p>
+        </div>
+      </div>
+
+      <% if @import_job.failure_count.positive? %>
+        <section class="mt-6">
+          <div class="flex items-center justify-between">
+            <h2 class="font-semibold text-gray-900">失敗列</h2>
+            <%= link_to "下載失敗清單", import_job_path(@import_job, format: :csv), class: "text-sm text-indigo-600 underline hover:no-underline", data: { turbo: false } %>
+          </div>
+
+          <div class="mt-3 overflow-hidden rounded-lg border border-gray-200 bg-white">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-gray-50 text-xs text-gray-500">
+                <tr>
+                  <th class="w-24 px-4 py-2 font-medium">列號</th>
+                  <th class="px-4 py-2 font-medium">原因</th>
+                  <th class="px-4 py-2 font-medium">原始內容</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                <% @failures.each do |failure| %>
+                  <tr>
+                    <td class="px-4 py-2 text-gray-500">第 <%= failure.line_number %> 列</td>
+                    <td class="px-4 py-2 text-gray-900"><%= failure.message %></td>
+                    <td class="px-4 py-2 font-mono text-xs text-gray-500"><%= failure.raw_row %></td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+
+          <%= render "shared/pagination", pagy: @pagy %>
+        </section>
+      <% end %>
+    <% end %>
+  </div>
+<% end %>

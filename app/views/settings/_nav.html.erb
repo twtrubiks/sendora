@@ -1,0 +1,10 @@
+<h1 class="text-2xl font-bold">設定</h1>
+
+<nav class="mt-4 flex gap-4 border-b border-gray-200 text-sm">
+  <%= link_to "團隊", settings_team_path,
+              class: "border-b-2 px-1 pb-2 #{current_page?(settings_team_path) ? 'border-indigo-600 font-medium text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'}" %>
+  <% if Current.membership.owner? %>
+    <%= link_to "成員", settings_memberships_path,
+                class: "border-b-2 px-1 pb-2 #{current_page?(settings_memberships_path) ? 'border-indigo-600 font-medium text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'}" %>
+  <% end %>
+</nav>

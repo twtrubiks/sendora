@@ -1,0 +1,13 @@
+acme_tom_first:
+  team: acme
+  customer: acme_tom
+  number: ORD-1
+  amount: 500
+  ordered_at: <%= Time.zone.parse("2026-05-10 12:00") %>
+
+acme_tom_second:
+  team: acme
+  customer: acme_tom
+  number: ORD-2
+  amount: 1280.5
+  ordered_at: <%= Time.zone.parse("2026-06-01 12:00") %>

@@ -1,0 +1,126 @@
+<% content_for :title, "#{@customer.email} - Sendora" %>
+
+<div class="flex items-start justify-between">
+  <div>
+    <h1 class="text-2xl font-bold"><%= @customer.name.presence || @customer.email %></h1>
+    <p class="mt-1 text-sm text-gray-500">
+      <%= @customer.email %>
+      <% if @customer.phone.present? %> · <%= @customer.phone %><% end %>
+      · 建立於 <%= @customer.created_at.strftime("%Y-%m-%d") %>
+    </p>
+    <div class="mt-2 flex gap-2">
+      <% if @customer.unsubscribed? %>
+        <span class="rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">已退訂(<%= @customer.unsubscribed_at.strftime("%Y-%m-%d") %>)</span>
+      <% end %>
+      <% if @customer.bounced? %>
+        <span class="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">退信(<%= @customer.bounced_at.strftime("%Y-%m-%d") %>)</span>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="flex gap-2">
+    <%= link_to "編輯", edit_customer_path(@customer), class: "rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50" %>
+    <%= button_to "刪除", customer_path(@customer), method: :delete,
+                  data: { turbo_confirm: "確定要刪除 #{@customer.email}?其訂單也會一併刪除。" },
+                  class: "cursor-pointer rounded-md border border-red-300 bg-white px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50" %>
+  </div>
+</div>
+
+<div class="mt-6 grid max-w-2xl grid-cols-3 gap-4">
+  <div class="rounded-lg border border-gray-200 bg-white p-4">
+    <p class="text-xs text-gray-500">訂單數</p>
+    <p class="mt-1 text-xl font-semibold"><%= number_with_delimiter(@orders.size) %></p>
+  </div>
+  <div class="rounded-lg border border-gray-200 bg-white p-4">
+    <p class="text-xs text-gray-500">累計消費</p>
+    <p class="mt-1 text-xl font-semibold"><%= number_with_delimiter(@total_spent.to_i) %></p>
+  </div>
+  <div class="rounded-lg border border-gray-200 bg-white p-4">
+    <p class="text-xs text-gray-500">最近購買</p>
+    <p class="mt-1 text-xl font-semibold"><%= @orders.first&.ordered_at&.strftime("%Y-%m-%d") || "—" %></p>
+  </div>
+</div>
+
+<section class="mt-8 max-w-2xl rounded-lg border border-gray-200 bg-white p-4">
+  <h2 class="font-semibold text-gray-900">標籤</h2>
+  <div class="mt-3 flex flex-wrap items-center gap-2">
+    <% @customer.tags.order(:name).each do |tag| %>
+      <span class="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-700">
+        <%= tag.name %>
+        <%= button_to "✕", customer_tag_path(@customer, tag), method: :delete,
+                      class: "cursor-pointer text-indigo-400 hover:text-red-600",
+                      form_class: "inline" %>
+      </span>
+    <% end %>
+    <% if @customer.tags.empty? %>
+      <span class="text-sm text-gray-500">尚未貼任何標籤</span>
+    <% end %>
+  </div>
+
+  <% available_tags = Current.team.tags.where.not(id: @customer.tag_ids).order(:name) %>
+  <% if available_tags.any? %>
+    <%= form_with url: customer_tags_path(@customer), method: :post, class: "mt-3 flex items-center gap-2" do |form| %>
+      <%= form.select :tag_id, available_tags.pluck(:name, :id), {}, class: "#{ApplicationHelper::INPUT_CLASSES} max-w-44" %>
+      <%= form.submit "貼上標籤", class: "cursor-pointer rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" %>
+    <% end %>
+  <% else %>
+    <p class="mt-3 text-sm text-gray-500"><%= link_to "前往標籤管理", tags_path, class: "text-indigo-600 underline hover:no-underline" %> 建立更多標籤</p>
+  <% end %>
+</section>
+
+<section class="mt-8 max-w-2xl">
+  <h2 class="font-semibold text-gray-900">訂單記錄</h2>
+
+  <div class="mt-3 overflow-hidden rounded-lg border border-gray-200 bg-white">
+    <table class="w-full text-left text-sm">
+      <thead class="bg-gray-50 text-xs text-gray-500">
+        <tr>
+          <th class="px-4 py-2 font-medium">訂單編號</th>
+          <th class="px-4 py-2 font-medium">金額</th>
+          <th class="px-4 py-2 font-medium">下單日期</th>
+          <th class="px-4 py-2"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        <% @orders.each do |order| %>
+          <tr>
+            <td class="px-4 py-2 font-mono text-gray-900"><%= order.number %></td>
+            <td class="px-4 py-2 text-gray-700"><%= number_with_delimiter(order.amount.to_i) %></td>
+            <td class="px-4 py-2 text-gray-500"><%= order.ordered_at.strftime("%Y-%m-%d") %></td>
+            <td class="px-4 py-2 text-right">
+              <%= button_to "刪除", customer_order_path(@customer, order), method: :delete,
+                            data: { turbo_confirm: "確定要刪除訂單 #{order.number}?" },
+                            class: "cursor-pointer text-sm text-red-600 hover:underline" %>
+            </td>
+          </tr>
+        <% end %>
+        <% if @orders.empty? %>
+          <tr><td colspan="4" class="px-4 py-6 text-center text-gray-500">還沒有訂單,可手動新增或透過 CSV 匯入</td></tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <details class="mt-3 rounded-lg border border-gray-200 bg-white p-4">
+    <summary class="cursor-pointer text-sm font-medium text-gray-700">手動新增訂單</summary>
+    <%= form_with url: customer_orders_path(@customer), method: :post, scope: :order, class: "mt-3 flex flex-wrap items-end gap-3" do |form| %>
+      <div>
+        <%= form.label :number, "訂單編號", class: "block text-xs text-gray-500" %>
+        <%= form.text_field :number, required: true, class: "#{ApplicationHelper::INPUT_CLASSES} mt-1" %>
+      </div>
+      <div>
+        <%= form.label :amount, "金額", class: "block text-xs text-gray-500" %>
+        <%= form.number_field :amount, required: true, min: 0, step: "0.01", class: "#{ApplicationHelper::INPUT_CLASSES} mt-1" %>
+      </div>
+      <div>
+        <%= form.label :ordered_at, "下單日期", class: "block text-xs text-gray-500" %>
+        <%= form.date_field :ordered_at, required: true, class: "#{ApplicationHelper::INPUT_CLASSES} mt-1" %>
+      </div>
+      <%= form.submit "新增訂單", class: ApplicationHelper::PRIMARY_BUTTON_CLASSES %>
+    <% end %>
+  </details>
+</section>
+
+<p class="mt-8">
+  <%= link_to "← 回客戶列表", customers_path, class: "text-sm text-gray-500 underline hover:no-underline" %>
+</p>

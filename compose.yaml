@@ -1,0 +1,45 @@
+# 本機開發用,自成一體:app 容器(ruby:4.0)+ 自帶 postgres 18,不依賴主機既有服務。
+#
+#   docker compose up                            # 首次自動裝 gem、建資料庫,再起服務 → http://localhost:3000
+#   docker compose run --rm web bin/rails test   # 一次性指令(test / migrate / console…)
+#   docker compose down                          # 停服務(加 -v 連 DB、gem volume 一起清)
+#
+# 開發寄出的信不會真的送出,在 http://localhost:3000/letter_opener 檢視。
+# 注意:這是開發環境;正式上線走 Kamal(config/deploy.yml),別拿這份部署。
+name: sendora
+
+services:
+  web:
+    image: ruby:4.0
+    working_dir: /app
+    command: bash -c "bundle check || bundle install && bin/rails db:prepare && bin/rails tailwindcss:build && rm -f tmp/pids/server.pid && exec bin/rails server -b 0.0.0.0"
+    environment:
+      DB_HOST: postgres
+      RAILS_ENV: development
+    volumes:
+      - .:/app
+      - bundle:/usr/local/bundle
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    tty: true
+    stdin_open: true
+
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  bundle:
+  postgres-data:

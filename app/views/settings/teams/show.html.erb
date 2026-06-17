@@ -1,0 +1,49 @@
+<% content_for :title, "團隊設定 - #{Current.team.name} - Sendora" %>
+
+<%= render "settings/nav" %>
+
+<div class="mt-6 max-w-xl space-y-6">
+  <section class="rounded-lg border border-gray-200 bg-white p-5">
+    <h2 class="font-semibold text-gray-900">基本資料</h2>
+
+    <%= form_with model: @team, url: settings_team_path, method: :patch, class: "contents" do |form| %>
+      <div class="my-4">
+        <%= form.label :name, class: "block text-sm font-medium text-gray-700" %>
+        <%= form.text_field :name, required: true, class: "#{ApplicationHelper::INPUT_CLASSES} mt-1" %>
+        <%= field_error @team, :name %>
+      </div>
+
+      <div class="my-4">
+        <%= form.label :slug, class: "block text-sm font-medium text-gray-700" %>
+        <p class="mt-1 text-sm text-gray-500">/t/<%= @team.slug %>(建立後不可變更)</p>
+      </div>
+
+      <%= form.submit "儲存", class: ApplicationHelper::PRIMARY_BUTTON_CLASSES %>
+    <% end %>
+  </section>
+
+  <section class="rounded-lg border border-gray-200 bg-white p-5">
+    <h2 class="font-semibold text-gray-900">發送額度</h2>
+    <p class="mt-2 text-sm text-gray-600">
+      本月已發送 <%= number_with_delimiter(@team.monthly_sent_count) %> /
+      <%= number_with_delimiter(@team.monthly_send_quota) %> 封,每月 1 日重置。
+      調整額度請聯絡系統管理者。
+    </p>
+  </section>
+
+  <% if Current.membership.owner? %>
+    <section class="rounded-lg border border-red-200 bg-white p-5">
+      <h2 class="font-semibold text-red-700">危險區</h2>
+      <p class="mt-2 text-sm text-gray-600">
+        刪除團隊會一併刪除所有成員關係與資料,無法復原。
+        請輸入網址代稱「<span class="font-mono"><%= @team.slug %></span>」確認。
+      </p>
+
+      <%= form_with url: settings_team_path, method: :delete, class: "mt-4 flex items-center gap-3",
+                    data: { turbo_confirm: "確定要刪除團隊「#{@team.name}」?此動作無法復原。" } do |form| %>
+        <%= form.text_field :confirm_slug, required: true, placeholder: @team.slug, class: "#{ApplicationHelper::INPUT_CLASSES} max-w-48" %>
+        <%= form.submit "刪除團隊", class: "cursor-pointer rounded-md bg-red-600 px-3.5 py-2.5 font-medium text-white hover:bg-red-500" %>
+      <% end %>
+    </section>
+  <% end %>
+</div>

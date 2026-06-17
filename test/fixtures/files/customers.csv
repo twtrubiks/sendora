@@ -1,0 +1,5 @@
+email,name,phone
+good1@example.com,客戶一,0911111111
+good2@example.com,客戶二,
+not-an-email,壞客戶,
+good3@example.com,客戶三,0933333333

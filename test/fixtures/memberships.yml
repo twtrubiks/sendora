@@ -1,0 +1,15 @@
+# alice:acme 擁有者;bob:acme 成員、globex 擁有者;carol 沒有任何團隊
+alice_acme:
+  user: alice
+  team: acme
+  role: owner
+
+bob_acme:
+  user: bob
+  team: acme
+  role: member
+
+bob_globex:
+  user: bob
+  team: globex
+  role: owner

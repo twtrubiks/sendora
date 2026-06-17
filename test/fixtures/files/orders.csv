@@ -1,0 +1,4 @@
+email,number,amount,ordered_at
+tom@example.com,ORD-100,999,2026-06-01
+ghost@example.com,ORD-101,500,2026-06-02
+tom@example.com,ORD-102,not-a-number,2026-06-03

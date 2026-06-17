@@ -1,0 +1,79 @@
+<% content_for :title, "儀表板 - #{Current.team.name} - Sendora" %>
+
+<% unless @has_data %>
+  <h1 class="text-2xl font-bold">儀表板</h1>
+
+  <div class="mt-10 rounded-lg border border-dashed border-gray-300 bg-white px-6 py-16 text-center">
+    <p class="text-lg font-medium text-gray-900">還沒有資料</p>
+    <p class="mt-2 text-sm text-gray-500">從匯入第一批客戶開始,接著分群、發送行銷信、看見成效。</p>
+    <%= link_to "前往匯入", import_jobs_path, class: "mt-6 #{ApplicationHelper::PRIMARY_BUTTON_CLASSES}" %>
+  </div>
+<% else %>
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold">儀表板</h1>
+
+    <%= form_with url: team_root_path, method: :get, class: "flex items-center gap-2" do |form| %>
+      <%= form.select :period,
+            [ [ "本月", "this_month" ], [ "上月", "last_month" ], [ "近 30 天", "last_30_days" ] ],
+            { selected: @period }, class: "#{ApplicationHelper::INPUT_CLASSES} w-32" %>
+      <%= form.submit "套用", class: "cursor-pointer rounded-md border border-gray-300 bg-white px-3.5 py-2 font-medium text-gray-700 hover:bg-gray-50" %>
+    <% end %>
+  </div>
+
+  <% kpi_cards = [
+       [ "營收", number_with_delimiter(@kpis[:revenue][0].to_i), number_with_delimiter(@kpis[:revenue][1].to_i) ],
+       [ "訂單數", number_with_delimiter(@kpis[:orders_count][0]), number_with_delimiter(@kpis[:orders_count][1]) ],
+       [ "新客戶", number_with_delimiter(@kpis[:new_customers][0]), number_with_delimiter(@kpis[:new_customers][1]) ],
+       [ "活躍客戶", number_with_delimiter(@kpis[:active_customers][0]), number_with_delimiter(@kpis[:active_customers][1]) ]
+     ] %>
+  <div class="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <% kpi_cards.each do |label, current, previous| %>
+      <div class="rounded-lg border border-gray-200 bg-white p-4">
+        <p class="text-xs text-gray-500"><%= label %></p>
+        <p class="mt-1 text-2xl font-semibold"><%= current %></p>
+        <p class="mt-1 text-xs text-gray-400">上期 <%= previous %></p>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="mt-6 grid gap-4 lg:grid-cols-2">
+    <div class="rounded-lg border border-gray-200 bg-white p-4">
+      <p class="text-sm font-medium text-gray-700">營收趨勢</p>
+      <%= line_chart @revenue_by_day, height: "240px", colors: [ "#4f46e5" ], thousands: "," %>
+    </div>
+    <div class="rounded-lg border border-gray-200 bg-white p-4">
+      <p class="text-sm font-medium text-gray-700">訂單數</p>
+      <%= column_chart @orders_by_day, height: "240px", colors: [ "#818cf8" ], thousands: "," %>
+    </div>
+  </div>
+
+  <section class="mt-6">
+    <h2 class="font-semibold text-gray-900">近期活動結果</h2>
+    <div class="mt-3 overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-gray-50 text-xs text-gray-500">
+          <tr>
+            <th class="px-4 py-2 font-medium">活動</th>
+            <th class="px-4 py-2 font-medium">狀態</th>
+            <th class="px-4 py-2 font-medium">寄達 / 失敗</th>
+            <th class="px-4 py-2 font-medium">發送時間</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <% @recent_campaigns.each do |campaign| %>
+            <% stats = campaign.deliveries.group(:status).count %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-2"><%= link_to campaign.name, campaign_path(campaign), class: "font-medium text-indigo-600 hover:underline" %></td>
+              <td class="px-4 py-2"><%= render "campaigns/status_badge", campaign: campaign %></td>
+              <td class="px-4 py-2 text-gray-700"><%= number_with_delimiter(stats["sent"].to_i) %> / <%= number_with_delimiter(stats["failed"].to_i) %></td>
+              <td class="px-4 py-2 text-gray-500"><%= campaign.sent_at&.strftime("%Y-%m-%d %H:%M") || "—" %></td>
+            </tr>
+          <% end %>
+          <% if @recent_campaigns.empty? %>
+            <tr><td colspan="4" class="px-4 py-6 text-center text-gray-500">還沒有發送過活動,<%= link_to "建立第一檔活動", new_campaign_path, class: "text-indigo-600 underline hover:no-underline" %></td></tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+<% end %>

@@ -1,0 +1,24 @@
+<% content_for :title, "我的團隊 - Sendora" %>
+
+<div class="flex items-center justify-between">
+  <h1 class="text-2xl font-bold">我的團隊</h1>
+  <%= link_to "建立團隊", new_team_path, class: "text-sm font-medium text-indigo-600 hover:text-indigo-500" %>
+</div>
+
+<ul class="mt-6 divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white">
+  <% @memberships.each do |membership| %>
+    <li>
+      <%= link_to team_root_path(team_slug: membership.team.slug), class: "flex items-center justify-between px-4 py-3 hover:bg-gray-50" do %>
+        <span>
+          <span class="font-medium text-gray-900"><%= membership.team.name %></span>
+          <span class="ml-2 text-sm text-gray-500">/t/<%= membership.team.slug %></span>
+        </span>
+        <span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700"><%= t("roles.#{membership.role}") %></span>
+      <% end %>
+    </li>
+  <% end %>
+</ul>
+
+<div class="mt-4 flex justify-end">
+  <%= button_to "登出", session_path, method: :delete, class: "cursor-pointer text-sm text-gray-500 underline hover:no-underline" %>
+</div>

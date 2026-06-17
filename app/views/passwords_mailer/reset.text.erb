@@ -1,0 +1,4 @@
+請到下列網址重設你的密碼:
+<%= edit_password_url(@user.password_reset_token) %>
+
+此連結將於 <%= distance_of_time_in_words(0, @user.password_reset_token_expires_in) %>後失效。
