@@ -9,6 +9,7 @@
     <legend class="px-1 text-sm font-semibold text-gray-900">① 對象</legend>
     <%= form.label :audience_id, class: "block text-sm font-medium text-gray-700" %>
     <%= form.collection_select :audience_id, Current.team.audiences.order(:name), :id, :name, {}, class: "#{ApplicationHelper::INPUT_CLASSES} mt-1" %>
+    <%= field_error campaign, :audience %>
     <p class="mt-1 text-sm text-gray-500">發送時會即時解析分群,並自動排除已退訂與退信的客戶。</p>
   </fieldset>
 

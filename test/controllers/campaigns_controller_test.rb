@@ -27,6 +27,22 @@ class CampaignsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to confirm_campaign_path(campaign, team_slug: "acme")
   end
 
+  test "不能綁定別團隊的分群(跨租戶 IDOR)" do
+    globex_audience = teams(:globex).audiences.create!(name: "G")
+
+    assert_no_difference "Campaign.count" do
+      post campaigns_path(team_slug: "acme"), params: { campaign: {
+        name: "偷名單", audience_id: globex_audience.id, subject: "s", body: "b"
+      } }
+    end
+    assert_response :unprocessable_entity
+
+    patch campaign_path(campaigns(:acme_draft), team_slug: "acme"),
+          params: { campaign: { audience_id: globex_audience.id } }
+    assert_response :unprocessable_entity
+    assert_equal audiences(:acme_vips).id, campaigns(:acme_draft).reload.audience_id
+  end
+
   test "確認頁顯示人數與剩餘額度" do
     get confirm_campaign_path(campaigns(:acme_draft), team_slug: "acme")
     assert_response :success

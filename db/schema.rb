@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_13_040001) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_10_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -48,6 +48,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_040001) do
     t.string "name", null: false
     t.bigint "team_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["id", "team_id"], name: "index_audiences_on_id_and_team_id", unique: true
     t.index ["team_id"], name: "index_audiences_on_team_id"
   end
 
@@ -193,7 +194,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_040001) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "audiences", "teams"
-  add_foreign_key "campaigns", "audiences"
+  add_foreign_key "campaigns", "audiences", column: ["audience_id", "team_id"], primary_key: ["id", "team_id"]
   add_foreign_key "campaigns", "teams"
   add_foreign_key "customer_tags", "customers"
   add_foreign_key "customer_tags", "tags"
