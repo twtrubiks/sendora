@@ -39,3 +39,6 @@
 
 # Local working notes for AI-assisted development (never commit).
 CLAUDE.local.md
+
+# mutant 的執行紀錄(bundle exec mutant session ...)
+/.mutant/

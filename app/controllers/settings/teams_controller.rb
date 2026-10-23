@@ -22,7 +22,9 @@ class Settings::TeamsController < ApplicationController
     if params[:confirm_slug] != @team.slug
       redirect_to settings_team_path, alert: "輸入的網址代稱不符,團隊未刪除"
     else
-      @team.destroy
+      # 先移除成員讓團隊立刻無法進入,資料量可能很大的刪除交給背景 job
+      @team.memberships.delete_all
+      TeamDestroyJob.perform_later(@team)
       redirect_to teams_path(team_slug: nil), notice: "團隊「#{@team.name}」已刪除"
     end
   end

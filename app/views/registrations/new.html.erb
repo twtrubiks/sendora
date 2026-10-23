@@ -22,6 +22,14 @@
     <%= field_error @user, :password_confirmation %>
   </div>
 
+  <% if Signup.code_required? %>
+    <div class="my-5">
+      <%= label_tag :signup_code, "邀請碼", class: "block text-sm font-medium text-gray-700" %>
+      <%= text_field_tag :signup_code, params[:signup_code], required: true, autocomplete: "off", class: "#{ApplicationHelper::INPUT_CLASSES} mt-1" %>
+      <p class="mt-1 text-sm text-gray-500">向系統管理者或要加入的團隊擁有者索取</p>
+    </div>
+  <% end %>
+
   <%= form.submit "建立帳號", class: ApplicationHelper::PRIMARY_BUTTON_CLASSES %>
 <% end %>
 

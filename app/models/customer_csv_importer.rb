@@ -1,4 +1,5 @@
-# 欄位:email(必填)、name、phone。以 [team_id, email] upsert,重複列以後者為準。
+# 欄位:email(必填)、name、phone。以 [team_id, email] upsert:
+# name / phone 留空不會清掉既有值;檔內同一 email 重複時,後面的列有值才覆蓋。
 class CustomerCsvImporter < CsvImporter
   private
     def required_headers = %w[ email ]
@@ -19,8 +20,13 @@ class CustomerCsvImporter < CsvImporter
     def flush(batch)
       return [ 0, [] ] if batch.empty?
 
-      rows = batch.reverse.uniq { |attrs| attrs[:email] }.reverse
-      Customer.upsert_all(rows, unique_by: %i[ team_id email ])
+      rows = batch.group_by { |attrs| attrs[:email] }.values
+                  .map { |dups| dups.reduce { |merged, attrs| merged.merge(attrs.compact) } }
+      Customer.upsert_all(rows, unique_by: %i[ team_id email ], on_duplicate: Arel.sql(<<~SQL))
+        name = COALESCE(EXCLUDED.name, customers.name),
+        phone = COALESCE(EXCLUDED.phone, customers.phone),
+        updated_at = EXCLUDED.updated_at
+      SQL
       [ batch.size, [] ]
     end
 end

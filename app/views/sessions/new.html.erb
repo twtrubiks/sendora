@@ -19,6 +19,8 @@
   </div>
 <% end %>
 
-<p class="mt-6 text-sm text-gray-500">
-  還沒有帳號?<%= link_to "註冊", new_registration_path, class: "text-indigo-600 underline hover:no-underline" %>
-</p>
+<% if Signup.open? %>
+  <p class="mt-6 text-sm text-gray-500">
+    還沒有帳號?<%= link_to "註冊", new_registration_path, class: "text-indigo-600 underline hover:no-underline" %>
+  </p>
+<% end %>

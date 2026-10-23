@@ -35,4 +35,25 @@ class CustomerTest < ActiveSupport::TestCase
     assert_not customers(:acme_tom).unsubscribed?
     assert_not customers(:acme_tom).bounced?
   end
+
+  test "刪除客戶保留已寄出與失敗的發送紀錄(本月額度不退),斷開關聯並清掉錯誤訊息;未寄的刪掉" do
+    team = teams(:acme)
+    tom = customers(:acme_tom)
+    campaign = campaigns(:acme_draft)
+    sent = campaign.deliveries.create!(team: team, customer: tom, status: :sent)
+    other = team.campaigns.create!(audience: audiences(:acme_all), name: "另一檔", subject: "s", body: "b")
+    failed = other.deliveries.create!(team: team, customer: tom, status: :failed, error_message: "550 5.1.1 <tom@example.com>")
+    third = team.campaigns.create!(audience: audiences(:acme_all), name: "第三檔", subject: "s", body: "b")
+    third.deliveries.create!(team: team, customer: tom, status: :pending)
+
+    assert_difference -> { team.monthly_sent_count }, -1 do   # 只少了沒寄出的那筆
+      tom.destroy!
+    end
+
+    assert_nil sent.reload.customer_id
+    assert sent.sent?
+    assert_nil failed.reload.customer_id
+    assert_nil failed.error_message
+    assert_equal 0, third.deliveries.count
+  end
 end

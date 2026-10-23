@@ -71,4 +71,7 @@ group :development do
 
   # Browse sent emails at /letter_opener (works inside containers)
   gem "letter_opener_web"
+
+  # 變異測試 bundle exec mutant run(設定見 config/mutant.yml);放 development 群組,不進正式環境映像
+  gem "mutant-minitest", "0.17.0", require: false
 end

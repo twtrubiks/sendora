@@ -64,6 +64,17 @@ class Settings::MembershipsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "還有其他擁有者時,擁有者可以自己離開團隊" do
+    memberships(:bob_acme).update!(role: :owner)
+    sign_in_as users(:alice)
+
+    delete settings_membership_path(memberships(:alice_acme), team_slug: "acme")
+
+    assert_redirected_to teams_path
+    assert_equal "你已離開團隊「Acme 商店」", flash[:notice]
+    assert_not teams(:acme).users.exists?(users(:alice).id)
+  end
+
   test "不能移除最後一位擁有者" do
     sign_in_as users(:alice)
 

@@ -20,6 +20,13 @@ class TeamsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a", text: /Globex/
   end
 
+  test "建立團隊表單頁" do
+    sign_in_as users(:carol)
+    get new_team_path
+    assert_response :success
+    assert_select "input[name='team[slug]']"
+  end
+
   test "建立團隊後成為擁有者並導向儀表板" do
     sign_in_as users(:carol)
 
@@ -30,6 +37,15 @@ class TeamsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to team_root_path(team_slug: "carol-shop")
     membership = users(:carol).memberships.joins(:team).find_by(teams: { slug: "carol-shop" })
     assert membership.owner?
+  end
+
+  test "新團隊預設發送額度 5000,建好就能寄(陌生人靠註冊邀請碼擋在門外)" do
+    sign_in_as users(:carol)
+    post teams_path, params: { team: { name: "Carol 的店", slug: "carol-shop" } }
+
+    team = Team.find_by!(slug: "carol-shop")
+    assert_equal 5000, team.monthly_send_quota
+    assert team.can_send?(1)
   end
 
   test "slug 重複時建立失敗" do

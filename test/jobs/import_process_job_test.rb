@@ -48,6 +48,28 @@ class ImportProcessJobTest < ActiveJob::TestCase
     assert_equal 3, job.reload.success_count
   end
 
+  test "匯入客戶:空白欄位不會清掉既有資料,檔內重複時後面有值才覆蓋" do
+    customers(:acme_tom).update!(phone: "0911000000")
+    job = build_import_job(kind: :customers, csv: <<~CSV)
+      email,name,phone
+      tom@example.com,,0987654321
+      dup@example.com,第一筆,0922000000
+      dup@example.com,,
+    CSV
+
+    # upsert 的時間戳是 DB 的 CURRENT_TIMESTAMP(不受 travel 影響),只驗證有更新
+    assert_changes -> { customers(:acme_tom).reload.updated_at } do
+      ImportProcessJob.perform_now(job)
+    end
+
+    tom = customers(:acme_tom).reload
+    assert_equal "Tom 陳", tom.name
+    assert_equal "0987654321", tom.phone
+
+    dup = teams(:acme).customers.find_by(email: "dup@example.com")
+    assert_equal [ "第一筆", "0922000000" ], [ dup.name, dup.phone ]
+  end
+
   test "匯入客戶:缺少必要欄位整批失敗" do
     job = build_import_job(kind: :customers, csv: "name,phone\n小明,0912\n")
 
@@ -87,6 +109,43 @@ class ImportProcessJobTest < ActiveJob::TestCase
     assert_match(/找不到客戶 ghost@example.com/, messages)
     assert_match(/amount 不是數字/, messages)
     assert_match(/ordered_at 不是有效日期/, messages)
+  end
+
+  test "匯入訂單:各種錯誤列記下列號與原因,欄位名稱不分大小寫、前後空白" do
+    job = build_import_job(kind: :orders, csv: <<~CSV)
+       Email , NUMBER ,amount,Ordered_At
+      ,ORD-200,100,2026-06-01
+      tom@example.com,,100,2026-06-01
+      tom@example.com,#{"N" * 101},100,2026-06-01
+      tom@example.com,ORD-201,-1,2026-06-01
+      tom@example.com,ORD-202,abc,2026-06-01
+      tom@example.com,ORD-203,100,not-a-date
+      TOM@Example.com,ORD-204,100,2026-06-01
+      tom@example.com,#{"M" * 100},100,2026-06-01
+      tom@example.com,ORD-205,100,
+      tom@example.com,ORD-206,100,2026-13-01
+    CSV
+
+    ImportProcessJob.perform_now(job)
+
+    job.reload
+    assert job.completed?
+    assert_equal [ 10, 2, 8 ], [ job.total_rows, job.success_count, job.failure_count ]
+    assert_equal({
+      2 => "email 不可空白",
+      3 => "number(訂單編號)不可空白",
+      4 => "number 不可超過 100 個字元",
+      5 => "amount 不可為負數",
+      6 => "amount 不是數字:abc",
+      7 => "ordered_at 不是有效日期:not-a-date",
+      10 => "ordered_at 不是有效日期:",
+      11 => "ordered_at 不是有效日期:2026-13-01"   # Time.zone.parse 對超出範圍的日期會拋 ArgumentError
+    }, job.import_failures.order(:line_number).pluck(:line_number, :message).to_h)
+
+    # email 不分大小寫、日期以台北時間解讀、編號剛好 100 字元可以
+    order = customers(:acme_tom).orders.find_by!(number: "ORD-204")
+    assert_equal Time.zone.parse("2026-06-01 00:00"), order.ordered_at
+    assert customers(:acme_tom).orders.exists?(number: "M" * 100)
   end
 
   test "匯入訂單:同編號 upsert 更新金額" do

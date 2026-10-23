@@ -20,6 +20,7 @@ Rails.application.routes.draw do
       member do
         get :confirm
         post :deliver
+        post :resume
         post :duplicate
       end
     end

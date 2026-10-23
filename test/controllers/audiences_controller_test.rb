@@ -30,6 +30,16 @@ class AudiencesControllerTest < ActionDispatch::IntegrationTest
                  audience.conditions)
   end
 
+  test "新增與編輯表單頁" do
+    get new_audience_path(team_slug: "acme")
+    assert_response :success
+    assert_select "input[name='audience[name]']"
+
+    get edit_audience_path(audiences(:acme_vips), team_slug: "acme")
+    assert_response :success
+    assert_select "input[name='audience[name]'][value='VIP 客戶']"
+  end
+
   test "沒有名稱建立失敗" do
     assert_no_difference "Audience.count" do
       post audiences_path(team_slug: "acme"), params: { audience: { name: "", rows: [] } }

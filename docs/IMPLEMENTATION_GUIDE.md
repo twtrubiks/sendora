@@ -148,6 +148,8 @@ Team ──< Campaign ──< Delivery >── Customer
 ### 5.1 認證 + 多租戶
 
 - `bin/rails generate authentication` 產生 User / Session / 密碼重設,夠用。
+- 註冊憑邀請碼(環境變數 `SIGNUP_CODE`,見 `app/models/signup.rb`):production 沒設就關閉註冊。
+  沒有這道門,任何人都能註冊後用部署者的 SMTP 與網域寄信。
 - 路由:`/t/:team_slug/...` 巢狀所有業務資源。
 - 權限:`Membership.role` 用 Rails enum,只有 owner / member 兩種。
   controller 寫一個 `require_owner!` helper 就夠(管成員、刪團隊、改額度才用到)。
@@ -236,7 +238,7 @@ end
 
 ### 5.8 發送額度
 
-- Team 一個欄位:`monthly_send_quota`(預設例如 5,000,調整用 console)。
+- Team 一個欄位:`monthly_send_quota`(預設 5,000,調整用 console)。
 - 一個 query method:
 
 ```ruby

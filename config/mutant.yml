@@ -1,0 +1,54 @@
+# 變異測試(mutation testing):bundle exec mutant run
+# mutant 對開源專案免費(usage: opensource),商業使用需付費授權。
+usage: opensource
+integration:
+  name: minitest
+includes:
+  - test
+requires:
+  - ./test/mutant_setup
+hooks:
+  - ./test/mutant_hooks.rb
+mutation:
+  timeout: 30.0
+matcher:
+  subjects:
+    - Audience*
+    - AudienceQuery*
+    - Campaign*
+    - CsvImporter*
+    - Customer*
+    - CustomerCsvImporter*
+    - CustomerTag*
+    - Delivery*
+    - ImportFailure*
+    - ImportJob*
+    - Membership*
+    - Order*
+    - OrderCsvImporter*
+    - Tag*
+    - Team*
+    - User*
+    - CampaignSendJob*
+    - ImportProcessJob*
+    - TeamDestroyJob*
+    - CampaignMailer*
+    - PasswordsMailer*
+    - Authentication*
+    - TeamContext*
+    - AudiencesController*
+    - CampaignsController*
+    - CustomerTagsController*
+    - CustomersController*
+    - DashboardsController*
+    - ImportJobsController*
+    - OrdersController*
+    - PasswordsController*
+    - RegistrationsController*
+    - SessionsController*
+    - TagsController*
+    - TeamsController*
+    - UnsubscribesController*
+    - Settings*
+    - ApplicationHelper*
+    - AudiencesHelper*

@@ -7,6 +7,17 @@ class Settings::TeamsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "額度為 0 時提示尚未開通,有額度時不提示" do
+    sign_in_as users(:bob)
+
+    get settings_team_path(team_slug: "acme")
+    assert_no_match "尚未開通發送額度", response.body
+
+    teams(:acme).update!(monthly_send_quota: 0)
+    get settings_team_path(team_slug: "acme")
+    assert_match "尚未開通發送額度", response.body
+  end
+
   test "成員可以改團隊名稱" do
     sign_in_as users(:bob)
     patch settings_team_path(team_slug: "acme"), params: { team: { name: "Acme 新名字" } }
@@ -40,14 +51,19 @@ class Settings::TeamsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to settings_team_path(team_slug: "acme")
   end
 
-  test "擁有者輸入正確 slug 即可刪除團隊" do
+  test "擁有者輸入正確 slug 即可刪除團隊:成員立刻移除,資料交給背景刪" do
     sign_in_as users(:alice)
 
-    assert_difference "Team.count", -1 do
+    assert_enqueued_with(job: TeamDestroyJob, args: [ teams(:acme) ]) do
       delete settings_team_path(team_slug: "acme"), params: { confirm_slug: "acme" }
     end
 
     assert_redirected_to teams_path
+    assert_equal 0, teams(:acme).memberships.count
+    get team_root_path(team_slug: "acme")
+    assert_redirected_to root_path
+
+    perform_enqueued_jobs
     assert_nil Team.find_by(slug: "acme")
   end
 end

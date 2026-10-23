@@ -1,6 +1,6 @@
 class CampaignsController < ApplicationController
   include TeamContext
-  before_action :set_campaign, only: %i[ show edit update confirm deliver duplicate destroy ]
+  before_action :set_campaign, only: %i[ show edit update confirm deliver resume duplicate destroy ]
   before_action :require_draft!, only: %i[ edit update confirm deliver destroy ]
   before_action :require_audiences!, only: %i[ new create ]
 
@@ -64,10 +64,26 @@ class CampaignsController < ApplicationController
       redirect_to confirm_campaign_path(@campaign), alert: "此分群目前沒有可寄送的客戶"
     elsif !Current.team.can_send?(recipients_count)
       redirect_to confirm_campaign_path(@campaign), alert: "超出本月發送額度,請聯絡管理者調整"
-    else
-      @campaign.update!(status: :sending)
+    elsif @campaign.start_sending
       CampaignSendJob.perform_later(@campaign)
       redirect_to campaign_path(@campaign), notice: "已開始發送,完成後狀態會自動更新"
+    else
+      redirect_to campaign_path(@campaign), alert: "此活動已經開始發送"
+    end
+  end
+
+  # 發送中斷(SMTP 故障、額度不足、非預期錯誤)後接續寄送:
+  # 已寄出的不會重寄,收件人層級失敗(如地址不存在)的也不重試
+  def resume
+    if !@campaign.failed?
+      redirect_to campaign_path(@campaign), alert: "只有發送失敗的活動可以接續寄送"
+    elsif !Current.team.can_send?(@campaign.pending_recipients_count)
+      redirect_to campaign_path(@campaign), alert: "超出本月發送額度,請聯絡管理者調整"
+    elsif @campaign.start_sending(from: :failed)
+      CampaignSendJob.perform_later(@campaign)
+      redirect_to campaign_path(@campaign), notice: "已接續發送,先前寄出的不會重寄"
+    else
+      redirect_to campaign_path(@campaign), alert: "此活動已經開始發送"
     end
   end
 
@@ -112,7 +128,7 @@ class CampaignsController < ApplicationController
       self.response_body = Enumerator.new do |yielder|
         yielder << CSV.generate_line([ "email", "status", "error", "sent_at" ])
         deliveries.find_each do |delivery|
-          yielder << CSV.generate_line([ delivery.customer.email, delivery.status,
+          yielder << CSV.generate_line([ delivery.customer&.email, delivery.status,
                                          delivery.error_message, delivery.sent_at&.strftime("%Y-%m-%d %H:%M:%S") ])
         end
       end

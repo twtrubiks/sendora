@@ -97,6 +97,7 @@ export SENDORA_DATABASE_PASSWORD='<自動產生的隨機字串>'
 export KAMAL_REGISTRY_PASSWORD='<Docker Hub access token>'
 export SMTP_USERNAME='dummy'     # 測 HTTPS 階段先 dummy;要真寄信再換
 export SMTP_PASSWORD='dummy'
+export SIGNUP_CODE='<一組隨機字串>'  # 註冊邀請碼,給要註冊的人;沒設 production 會關閉註冊
 # RAILS_MASTER_KEY 由 .kamal/secrets 直接 `cat config/master.key` 帶入,不放這裡
 ```
 
@@ -115,7 +116,7 @@ kamal() {
         -v "$PWD:/workdir" \
         -v /var/run/docker.sock:/var/run/docker.sock \
         -v "$HOME/.ssh:/root/.ssh:ro" \
-        -e SENDORA_DATABASE_PASSWORD -e KAMAL_REGISTRY_PASSWORD -e SMTP_USERNAME -e SMTP_PASSWORD \
+        -e SENDORA_DATABASE_PASSWORD -e KAMAL_REGISTRY_PASSWORD -e SMTP_USERNAME -e SMTP_PASSWORD -e SIGNUP_CODE \
         ghcr.io/basecamp/kamal:latest "$@" )
 }
 ```
@@ -190,6 +191,16 @@ kamal accessory logs db      # postgres 日誌
 kamal proxy reboot           # 重啟 kamal-proxy
 kamal details                # 看所有容器狀態
 ```
+
+調整團隊發送額度(新團隊預設 5000):
+
+```ruby
+# kamal console 進去後
+Team.find_by!(slug: "團隊網址代稱").update!(monthly_send_quota: 10000)
+```
+
+註冊邀請碼:`SIGNUP_CODE` 沒設時 production 關閉註冊(登入頁不顯示註冊連結)。
+要換碼就改 `~/.sendora-deploy.env` 後重新 deploy;新成員拿碼自行註冊,再由團隊擁有者加入團隊。
 
 改 secrets / 環境變數:
 - 改 `~/.sendora-deploy.env` 後重新 `kamal deploy`(或 `kamal env push`)。

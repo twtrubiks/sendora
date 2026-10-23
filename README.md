@@ -29,7 +29,8 @@ Mailchimp / Klaviyo **核心功能**的精簡自架替代——
 - **多租戶**:User / Team / Membership,角色只有 owner / member 兩種;
   所有業務資源掛在 `/t/:team_slug/` 之下,書籤與分享連結不會跑錯團隊。
 - **客戶與訂單**:客戶有 CRUD、搜尋、標籤,訂單掛在客戶底下(新增 / 刪除);
-  CSV 背景匯入(上限 10MB,串流逐列解析、分批 upsert,
+  CSV 背景匯入(上限 10MB,串流逐列解析、分批 upsert;
+  已存在的客戶以 email 比對更新,空白欄位不會清掉既有資料;
   失敗列留存列號與原因、可下載清單,原始檔處理完即刪)。
 - **分群(Audience)**:條件存 jsonb(標籤、累計消費、訂單數、購買與建立日期區間,
   彼此 AND),不存名單、發送當下動態解析;編輯時可即時預覽人數。
@@ -37,9 +38,13 @@ Mailchimp / Klaviyo **核心功能**的精簡自架替代——
   背景批量發送。Delivery 以 `[campaign_id, customer_id]` 唯一索引防重複寄送,
   發送 job 只掃 pending、逐筆更新狀態,中斷重跑不會重寄;
   同一活動同時只允許一個發送 job。支援 `{{name}}` 個人化。
+  發送中斷(SMTP 故障、額度不足等)時活動標為失敗,修正後可在活動頁**接續寄送**:
+  已寄出的不重寄,這段期間退訂的也不寄。
 - **發送額度**:每團隊一個月額度欄位,發送前檢查、不足擋下;
   Topbar 常駐本月用量,達九成變黃提醒。額度調整走 rails console,不做計費。
-- **退訂與退信**:每封信帶簽名退訂連結(30 天過期)與
+- **註冊邀請碼**:正式環境憑環境變數 `SIGNUP_CODE` 註冊、沒設就關閉註冊,
+  免得陌生人註冊後拿你的 SMTP 與網域寄垃圾信;本機開發不設即開放(設定見 [docs/KAMAL_DEPLOY.md](docs/KAMAL_DEPLOY.md))。
+- **退訂與退信**:每封信帶簽名退訂連結(不過期,客戶 email 變更即失效)與
   List-Unsubscribe one-click header(RFC 8058);公開退訂頁不需登入。
   SMTP 同步寄送錯誤記入 `bounced_at`,之後的發送自動排除。
 - **儀表板**:KPI 卡與營收/訂單趨勢圖(chartkick + groupdate),
@@ -113,9 +118,25 @@ bin/rails test       # 測試
 `bin/ci`(`config/ci.rb`)除上述檢查外,起手會先跑 `Setup`,最後以
 `db:seed:replant` 重建種子驗證 `db/seeds.rb` 可重跑,合計 7 步。
 
-測試目前涵蓋 model / controller / job / mailer / integration 層(150 個;
+測試目前涵蓋 model / controller / job / mailer / integration 層(161 個;
 integration 為 HTTP 層流程串接,非瀏覽器測試),
 尚無 system test,瀏覽器端 JS 行為未有自動化測試。
+
+### 變異測試(mutation testing)
+
+用 [mutant](https://github.com/mbj/mutant) 檢驗測試本身夠不夠力:逐一把程式碼改壞
+(`>=` 改 `>`、刪一行、回傳 `nil`…),看整套測試抓不抓得到;
+沒被抓到的「存活變異」就是測試沒驗證到的行為。設定見 `config/mutant.yml`。
+
+```bash
+bundle exec mutant run                               # 全部(約 6,400 個變異,4 核約 2.5–3 小時)
+bundle exec mutant run --since main                  # 只跑相對 main 改動過的方法
+bundle exec mutant run -- 'CampaignSendJob*'         # 只跑某個類別
+bundle exec mutant session subject 'Team#can_send?'  # 看上次執行時該方法的存活變異
+```
+
+每個 worker 會自建 `sendora_test_mutant_N` 測試資料庫;太慢所以不在 `bin/ci` 裡,
+適合改完某個類別後針對性地跑。mutant 對開源專案免費(`usage: opensource`)。
 
 ## 部署(Kamal,單機)
 
@@ -141,7 +162,7 @@ kamal-proxy 自動 SSL、ActiveStorage volume、Solid Queue 跑在 Puma 進程�
 
 - 只有立即發送,沒有排程發送(`scheduled_at` 之後要加不影響主幹)。
 - 成效只統計寄達/失敗,沒有開信、點擊追蹤。
-- 邀請成員僅接受已註冊使用者的 email,不會寄邀請信。
+- 邀請成員僅接受已註冊使用者的 email,不會寄邀請信;對方要先拿邀請碼自行註冊。
 - 退信只處理 SMTP 同步錯誤;供應商的非同步 bounce webhook 未實作,
   使用 SES 等服務商時需留意退信率回報的缺口。
 - 沒有後台管理介面,營運操作(調額度等)走 rails console。

@@ -31,6 +31,8 @@ env:
     - SENDORA_DATABASE_PASSWORD
     - SMTP_USERNAME
     - SMTP_PASSWORD
+    # 註冊邀請碼:production 沒設就關閉註冊(見 app/models/signup.rb)
+    - SIGNUP_CODE
   clear:
     # Solid Queue 跑在 Puma 進程內,免獨立 worker;量大了再拆 job 伺服器
     SOLID_QUEUE_IN_PUMA: true

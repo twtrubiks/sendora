@@ -46,6 +46,27 @@ class AudienceQueryTest < ActiveSupport::TestCase
     assert_equal 0, query("created_before" => Date.yesterday.to_s).count
   end
 
+  test "建立日期以台北時間的日界為準:之後含當天、早於不含當天" do
+    before_midnight = @team.customers.create!(email: "a@example.com", created_at: Time.zone.parse("2026-06-30 23:30"))
+    at_midnight = @team.customers.create!(email: "m@example.com", created_at: Time.zone.parse("2026-07-01 00:00"))
+    after_midnight = @team.customers.create!(email: "b@example.com", created_at: Time.zone.parse("2026-07-01 00:30"))
+    all = [ before_midnight, at_midnight, after_midnight ]
+
+    assert_equal [ at_midnight, after_midnight ], query("created_after" => "2026-07-01").customers.where(id: all).order(:created_at).to_a
+    assert_equal [ before_midnight ], query("created_before" => "2026-07-01").customers.where(id: all).to_a
+  end
+
+  test "最近購買日以台北時間的日界為準" do
+    before_midnight = @team.customers.create!(email: "a@example.com")
+    after_midnight = @team.customers.create!(email: "b@example.com")
+    before_midnight.orders.create!(team: @team, number: "A", amount: 1, ordered_at: Time.zone.parse("2026-06-30 23:30"))
+    after_midnight.orders.create!(team: @team, number: "B", amount: 1, ordered_at: Time.zone.parse("2026-07-01 00:30"))
+    pair = [ before_midnight, after_midnight ]
+
+    assert_equal [ after_midnight ], query("ordered_after" => "2026-07-01").customers.where(id: pair).to_a
+    assert_equal [ before_midnight ], query("ordered_before" => "2026-07-01").customers.where(id: pair).to_a
+  end
+
   test "條件之間是 AND" do
     result = query("tags" => [ "VIP" ], "min_total_spent" => "1000", "min_orders_count" => "2")
     assert_equal [ customers(:acme_tom) ], result.customers.to_a

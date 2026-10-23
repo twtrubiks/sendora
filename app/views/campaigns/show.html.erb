@@ -27,6 +27,17 @@
 
     <% if @campaign.failed? %>
       <div class="mt-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700"><%= @campaign.error_message %></div>
+
+      <% if (resumable_count = @campaign.resumable_count).positive? %>
+        <div class="mt-3 flex items-center gap-3">
+          <%= button_to "接續寄送", resume_campaign_path(@campaign), method: :post,
+                        class: ApplicationHelper::PRIMARY_BUTTON_CLASSES,
+                        data: { turbo_confirm: "接續寄送給 #{number_with_delimiter(resumable_count)} 位尚未寄出的客戶?" } %>
+          <span class="text-sm text-gray-500">
+            還有 <%= number_with_delimiter(resumable_count) %> 位尚未寄出;已寄出的不會重寄,地址無效等失敗不會重試。
+          </span>
+        </div>
+      <% end %>
     <% end %>
 
     <div class="mt-4 grid max-w-xl grid-cols-3 gap-4">
@@ -64,7 +75,7 @@
             <tbody class="divide-y divide-gray-100">
               <% @failed_deliveries.each do |delivery| %>
                 <tr>
-                  <td class="px-4 py-2 text-gray-900"><%= delivery.customer.email %></td>
+                  <td class="px-4 py-2 text-gray-900"><%= delivery.customer&.email || "(已刪除的客戶)" %></td>
                   <td class="px-4 py-2 text-gray-600"><%= delivery.error_message %></td>
                 </tr>
               <% end %>
